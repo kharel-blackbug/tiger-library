@@ -1,0 +1,37 @@
+# render.yaml — Tiger's Library on Render.com (alternative to Railway)
+services:
+  - type: web
+    name: tigers-library
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.0.0
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        generateValue: false
+        value: 10000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        sync: false          # Set manually in dashboard — never commit this
+      - key: ANTHROPIC_API_KEY
+        sync: false          # Set manually in dashboard
+      - key: DB_PATH
+        value: /var/data/library.sqlite
+      - key: UPLOADS_DIR
+        value: /var/data/uploads
+
+  # Persistent disk (required for SQLite + uploads — needs paid plan)
+  # Free plan: disk resets on redeploy. Upgrade to Starter ($7/mo) for persistence.
+  disk:
+    name: library-data
+    mountPath: /var/data
+    sizeGB: 1

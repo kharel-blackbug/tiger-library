@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build output — built by GitHub Actions, not committed
+dist/
+
+# Local database — never commit
+db/
+*.sqlite
+
+# Environment — secrets never go in git
+.env
+.env.local
+.env.production
+
+# Uploads — files uploaded by users
+uploads/
+
+# Test artifacts
+coverage/
+playwright-report/
+test-results/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
