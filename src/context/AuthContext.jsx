@@ -1,6 +1,7 @@
 // src/context/AuthContext.jsx
 import { createContext, useContext, useReducer, useCallback, useEffect } from 'react'
 import toast from 'react-hot-toast'
+import { api } from '@/api/client'
 
 const AuthContext = createContext(null)
 
@@ -21,19 +22,13 @@ export function AuthProvider({ children }) {
 
   const checkMe = useCallback(async () => {
     try {
-      const res = await fetch('/api/auth/me', { credentials: 'include' })
-      const data = await res.json().catch(() => ({}))
-
-      // Must have a valid user object with id AND role to be considered logged in.
-      // An empty object {} from a stale JWT must NOT count as authenticated.
-      if (res.ok && data.user && data.user.id && data.user.role) {
+      // Use api.me() so the Railway base URL is applied correctly in production
+      const data = await api.me()
+      if (data.user && data.user.id && data.user.role) {
         dispatch({ type: 'SET_USER', payload: data.user })
         try {
-          const sr = await fetch('/api/auth/sheets/status', { credentials: 'include' })
-          if (sr.ok) {
-            const sd = await sr.json()
-            dispatch({ type: 'SET_SHEETS', payload: !!sd.connected })
-          }
+          const sd = await api.sheetStatus()
+          dispatch({ type: 'SET_SHEETS', payload: !!sd.connected })
         } catch (_) {
           // Sheets status failure is non-fatal
         }
@@ -41,22 +36,15 @@ export function AuthProvider({ children }) {
         dispatch({ type: 'SET_USER', payload: null })
       }
     } catch (_) {
-      // Network error — server not running yet
-      dispatch({ type: 'SET_LOADING', payload: false })
+      // 401 or network error — not logged in
+      dispatch({ type: 'SET_USER', payload: null })
     }
   }, [])
 
   useEffect(() => { checkMe() }, [checkMe])
 
   const login = useCallback(async (username, password) => {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Login failed')
+    const data = await api.login({ username, password })
     dispatch({ type: 'SET_USER', payload: data.user })
     toast.success(`Welcome back, ${data.user.display_name || data.user.username}!`)
     await checkMe()
@@ -64,7 +52,7 @@ export function AuthProvider({ children }) {
   }, [checkMe])
 
   const logout = useCallback(async () => {
-    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+    try { await api.logout() } catch (_) {}
     dispatch({ type: 'LOGOUT' })
     toast.success('Logged out')
   }, [])
