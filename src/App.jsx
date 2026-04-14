@@ -1,5 +1,6 @@
 // src/App.jsx
 import { useEffect } from 'react'
+import { useState } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useLibrary } from '@/context/LibraryContext'
@@ -15,22 +16,22 @@ import BookScan from '@/pages/BookScan'
 import Settings from '@/pages/Settings'
 import Login from '@/pages/Login'
 import AddBookModal from '@/components/AddBookModal'
-import { useState } from 'react'
 
-const PAGE = {
-  library:   Library,
-  dashboard: Dashboard,
-  wishlist:  Wishlist,
-  goals:     Goals,
-  scan:      BookScan,
-  settings:  Settings,
-}
+const ADMIN_PAGES = { scan: BookScan, settings: Settings }
+const ALL_PAGES   = { library: Library, dashboard: Dashboard, wishlist: Wishlist, goals: Goals }
 
 function AppShell() {
-  const { activeView, loading: libLoading, fetchBooks, fetchWishlist } = useLibrary()
-  const { sheetsConnected } = useAuth()
+  const { activeView, loading: libLoading, fetchBooks, fetchWishlist, dispatch } = useLibrary()
+  const { sheetsConnected, isAdmin } = useAuth()
   const [editBook, setEditBook] = useState(null)
   const [editOpen, setEditOpen] = useState(false)
+
+  // If viewer tries to access admin-only page, redirect to library
+  useEffect(() => {
+    if (!isAdmin && (activeView === 'settings' || activeView === 'scan')) {
+      dispatch({ type: 'SET_VIEW', payload: 'library' })
+    }
+  }, [activeView, isAdmin, dispatch])
 
   useEffect(() => {
     if (sheetsConnected) {
@@ -39,24 +40,26 @@ function AppShell() {
     }
   }, [sheetsConnected])
 
-  const PageComponent = PAGE[activeView] || Library
+  // Resolve page component — admin gets extra pages
+  const pageMap = isAdmin ? { ...ALL_PAGES, ...ADMIN_PAGES } : ALL_PAGES
+  const PageComponent = pageMap[activeView] || Library
 
   return (
     <div className="min-h-screen bg-parchment font-sans text-ink">
       <Hero />
       <Nav />
 
-      {/* Sheets not connected banner */}
-      {!sheetsConnected && activeView !== 'settings' && (
+      {/* Only show "connect sheet" banner to admin — viewers just see empty state */}
+      {isAdmin && !sheetsConnected && activeView !== 'settings' && (
         <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 text-center text-sm text-amber-800">
-          ⚠ Google Sheet not connected — go to{' '}
+          ⚠ Google Sheet not connected —{' '}
           <button
             className="underline font-medium"
-            onClick={() => useLibrary.dispatch?.({ type: 'SET_VIEW', payload: 'settings' })}
+            onClick={() => dispatch({ type: 'SET_VIEW', payload: 'settings' })}
           >
-            Settings
+            go to Settings
           </button>
-          {' '}to connect your Sheet and start using the library.
+          {' '}to connect your Sheet.
         </div>
       )}
 
@@ -83,19 +86,21 @@ function AppShell() {
       </main>
 
       <footer className="text-center py-6 text-[9px] tracking-[4px] uppercase border-t border-fog-dark bg-bamboo-deeper text-white/30 font-sans">
-        Tiger's Library · Tashiling, Gangtok, Sikkim
+        Tiger's Library · Queenbridge, Gangtok, Sikkim
       </footer>
 
       <BookDrawer
-        onEdit={b => { setEditBook(b); setEditOpen(true) }}
+        onEdit={b => { if (isAdmin) { setEditBook(b); setEditOpen(true) } }}
         onDelete={() => {}}
       />
 
-      <AddBookModal
-        open={editOpen}
-        onClose={() => { setEditOpen(false); setEditBook(null) }}
-        editBook={editBook}
-      />
+      {isAdmin && (
+        <AddBookModal
+          open={editOpen}
+          onClose={() => { setEditOpen(false); setEditBook(null) }}
+          editBook={editBook}
+        />
+      )}
 
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}

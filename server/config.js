@@ -9,6 +9,8 @@ module.exports = {
   jwtExpiry:      process.env.JWT_EXPIRY || '7d',
   adminUsername:  process.env.ADMIN_USERNAME || 'admin',
   adminPassword:  process.env.ADMIN_PASSWORD || 'changeme123',   // hashed on first boot
+  readerUsername: process.env.READER_USERNAME || 'reader',
+  readerPassword: process.env.READER_PASSWORD || 'readonly123',  // hashed on first boot
   anthropicKey:   process.env.ANTHROPIC_API_KEY || '',
   claudeModel:    process.env.CLAUDE_MODEL || 'claude-sonnet-4-20250514',
   uploadsDir:     process.env.UPLOADS_DIR || (

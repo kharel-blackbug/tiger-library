@@ -39,12 +39,21 @@ function attachLocalDB(req, res, next) {
   next()
 }
 
-// If a Google Sheet is configured for this user/session, attach a SheetsDB
+// If a Google Sheet is configured, attach a SheetsDB.
+// Viewers share the admin's sheet config (same library, read-only).
 async function attachSheetsDB(req, res, next) {
   try {
     if (!req.user) return next()
     const db = req.localDB
-    const user = Object.assign({}, db.prepare('SELECT * FROM users WHERE id=?').get(req.user.id))
+
+    // Try current user's config first
+    let user = Object.assign({}, db.prepare('SELECT * FROM users WHERE id=?').get(req.user.id))
+
+    // If this user has no sheet config (e.g. viewer/reader), use admin's config
+    if (!user.sheet_id || !user.credentials) {
+      user = Object.assign({}, db.prepare("SELECT * FROM users WHERE role='admin' LIMIT 1").get())
+    }
+
     if (!user || !user.sheet_id || !user.credentials) return next()
 
     const { getDB } = require('../services/sheets')

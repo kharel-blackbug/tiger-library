@@ -22,7 +22,7 @@ function Section({ title, icon: Icon, children }) {
 }
 
 export default function Settings() {
-  const { user, checkMe } = useAuth()
+  const { user, checkMe, isAdmin, saveSheetConfig } = useAuth()
   const { fetchBooks } = useLibrary()
   const [seeding, setSeeding] = useState(false)
   const [sheetStatus, setSheetStatus] = useState(null)
@@ -49,6 +49,8 @@ export default function Settings() {
     try {
       await api.connectSheet({ sheet_id: sheetForm.sheet_id.trim(), credentials: creds })
       toast.success('Google Sheet connected! All tabs created.')
+      // Save to localStorage so it survives server restarts
+      saveSheetConfig(sheetForm.sheet_id.trim(), creds)
       const status = await api.sheetStatus()
       setSheetStatus(status)
       await checkMe()

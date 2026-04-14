@@ -31,7 +31,7 @@ export default function Hero() {
 
       <div className="relative z-10 max-w-4xl mx-auto px-6 py-12 sm:py-16 text-center">
         <p className="text-[9px] tracking-[8px] uppercase text-white/30 mb-5 font-sans">
-          Tashiling · Gangtok · Sikkim
+          Queenbridge · Gangtok · Sikkim
         </p>
 
         <h1 className="font-display font-bold text-white leading-none mb-2"

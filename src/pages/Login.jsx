@@ -27,7 +27,6 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-bamboo-deeper via-bamboo-dark to-slate-deeper flex items-center justify-center p-4">
-      {/* Background pattern */}
       <div className="absolute inset-0 opacity-5"
         style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '32px 32px' }}
       />
@@ -45,28 +44,26 @@ export default function Login() {
           </div>
           <h1 className="font-display text-4xl font-bold text-white leading-none mb-1">Tiger's</h1>
           <h1 className="font-display text-4xl font-bold text-white/40 italic leading-none">Library</h1>
-          <p className="text-white/30 text-xs tracking-[4px] uppercase mt-3">Tashiling · Gangtok</p>
+          <p className="text-white/30 text-xs tracking-[4px] uppercase mt-3">Queenbridge · Gangtok</p>
         </div>
 
-        {/* Card */}
+        {/* Login card */}
         <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-6 shadow-2xl">
           <div className="flex items-center gap-2 mb-6">
             <Lock size={14} className="text-white/50" />
-            <span className="text-white/60 text-xs tracking-widest uppercase">Admin Access</span>
+            <span className="text-white/60 text-xs tracking-widest uppercase">Sign In</span>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <input
-                data-testid="login-username"
-                type="text"
-                placeholder="Username"
-                value={form.username}
-                onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/50 focus:bg-white/15 transition-all text-sm"
-                autoComplete="username"
-              />
-            </div>
+            <input
+              data-testid="login-username"
+              type="text"
+              placeholder="Username"
+              value={form.username}
+              onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
+              className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/50 focus:bg-white/15 transition-all text-sm"
+              autoComplete="username"
+            />
             <div className="relative">
               <input
                 data-testid="login-password"
@@ -106,9 +103,17 @@ export default function Login() {
             </Button>
           </form>
 
-          <p className="text-white/20 text-xs text-center mt-4">
-            Default: admin / changeme123
-          </p>
+          {/* Account hints */}
+          <div className="mt-5 pt-4 border-t border-white/10 space-y-1.5">
+            <div className="flex justify-between text-[11px] text-white/25">
+              <span>Admin</span>
+              <span>admin / your password</span>
+            </div>
+            <div className="flex justify-between text-[11px] text-white/25">
+              <span>Reader</span>
+              <span>reader / readonly123</span>
+            </div>
+          </div>
         </div>
       </motion.div>
     </div>

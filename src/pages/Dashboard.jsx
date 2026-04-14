@@ -95,7 +95,7 @@ export default function Dashboard() {
       <div>
         <h1 className="font-display text-3xl text-ink mb-1">Reading Dashboard</h1>
         <p className="text-[10px] tracking-widest uppercase text-stone">
-          {user?.display_name || user?.username} · Tashiling, Gangtok
+          {user?.display_name || user?.username} · Queenbridge, Gangtok
         </p>
       </div>
 

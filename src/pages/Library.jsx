@@ -73,7 +73,7 @@ export default function Library() {
       </style></head>
       <body>
         <h1>Tiger's Library</h1>
-        <p>Tashiling, Gangtok · ${books.length} volumes catalogued</p>
+        <p>Queenbridge, Gangtok · ${books.length} volumes catalogued</p>
         <table>
           <thead><tr><th>Title</th><th>Author</th><th>Genre</th><th>Status</th><th>Rating</th><th>Finished</th></tr></thead>
           <tbody>${rows}</tbody>

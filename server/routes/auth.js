@@ -11,14 +11,23 @@ const { requireAuth, requireAdmin } = require('../middleware/auth')
 const router = express.Router()
 const wrap   = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next)
 
-// Ensure admin exists in local DB
+// Ensure admin and reader users exist in local DB
 function ensureAdmin(db) {
-  const existing = db.prepare("SELECT id FROM users WHERE role='admin'").get()
-  if (!existing) {
+  // Admin user
+  const existingAdmin = db.prepare("SELECT id FROM users WHERE role='admin'").get()
+  if (!existingAdmin) {
     const hash = bcrypt.hashSync(cfg.adminPassword, 10)
     db.prepare('INSERT INTO users (id,username,display_name,role,password_hash) VALUES (?,?,?,?,?)')
       .run(uuid(), cfg.adminUsername, 'Administrator', 'admin', hash)
     console.log(`Admin user "${cfg.adminUsername}" created`)
+  }
+  // Reader user
+  const existingReader = db.prepare("SELECT id FROM users WHERE role='viewer'").get()
+  if (!existingReader) {
+    const hash = bcrypt.hashSync(cfg.readerPassword, 10)
+    db.prepare('INSERT INTO users (id,username,display_name,role,password_hash) VALUES (?,?,?,?,?)')
+      .run(uuid(), cfg.readerUsername, 'Reader', 'viewer', hash)
+    console.log(`Reader user "${cfg.readerUsername}" created`)
   }
 }
 
@@ -133,9 +142,13 @@ router.put('/sheets', requireAuth, requireAdmin, wrap(async (req, res) => {
 
 // GET /api/auth/sheets/status
 router.get('/sheets/status', requireAuth, wrap(async (req, res) => {
-  const user = Object.assign({}, req.localDB.prepare('SELECT sheet_id FROM users WHERE id=?').get(req.user.id))
-  if (!user.sheet_id) return res.json({ connected: false })
+  // Check own config first, then fall back to admin config (for viewer accounts)
+  let user = Object.assign({}, req.localDB.prepare('SELECT sheet_id FROM users WHERE id=?').get(req.user.id))
+  if (!user.sheet_id) {
+    user = Object.assign({}, req.localDB.prepare("SELECT sheet_id FROM users WHERE role='admin' LIMIT 1").get())
+  }
 
+  if (!user.sheet_id) return res.json({ connected: false })
   if (!req.sheetsDB) return res.json({ connected: false, sheet_id: user.sheet_id, error: 'Could not connect' })
 
   try {
