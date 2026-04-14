@@ -1,18 +1,24 @@
 // src/api/client.js
-// VITE_API_URL is injected at build time by Vite's `define` config.
-// In dev: empty string → Vite proxy sends /api/* to localhost:3001
-// In prod (GitHub Pages): Railway backend URL, set via GitHub Actions secret
-// In Jest: process.env.VITE_API_URL = '' (default) so all calls go to /api/*
-const BASE = (process.env.VITE_API_URL || '').replace(/\/$/, '')
+// Vite replaces import.meta.env.VITE_API_URL at build time.
+// In dev:  '' → Vite proxy forwards /api/* to localhost:3001
+// In prod: Railway URL baked in at build time from GitHub Actions secret
+const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+
+// Get stored token for Authorization header fallback (when cookies blocked cross-origin)
+function getStoredToken() {
+  try { return localStorage.getItem('tl_token') } catch { return null }
+}
 
 async function request(method, path, body, isFormData = false) {
+  const token = getStoredToken()
   const opts = {
     method,
     credentials: 'include',
     signal: AbortSignal.timeout(30000),
+    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
   }
   if (body && !isFormData) {
-    opts.headers = { 'Content-Type': 'application/json' }
+    opts.headers = { ...opts.headers, 'Content-Type': 'application/json' }
     opts.body = JSON.stringify(body)
   } else if (isFormData) {
     opts.body = body

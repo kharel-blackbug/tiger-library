@@ -65,13 +65,24 @@ router.post('/logout', (req, res) => {
 
 // GET /api/auth/me
 router.get('/me', requireAuth, (req, res) => {
-  const row = req.localDB.prepare('SELECT id,username,display_name,role,sheet_id FROM users WHERE id=?').get(req.user.id)
-  if (!row || !row.id) {
-    // JWT references a user that no longer exists in DB (e.g. after DB reset)
-    res.clearCookie('token')
-    return res.status(401).json({ error: 'Session invalid — please log in again' })
+  // Primary: return user info directly from the verified JWT.
+  // This works even if the DB has been reset (e.g. Railway ephemeral filesystem).
+  // The JWT was signed with our secret so it's trustworthy.
+  const user = {
+    id:           req.user.id,
+    username:     req.user.username,
+    display_name: req.user.display_name || req.user.username,
+    role:         req.user.role,
+    sheet_id:     null,
   }
-  res.json({ user: Object.assign({}, row) })
+
+  // Optionally enrich with sheet_id from DB (non-fatal if DB is gone)
+  try {
+    const row = req.localDB.prepare('SELECT sheet_id FROM users WHERE id=?').get(req.user.id)
+    if (row && row.sheet_id) user.sheet_id = row.sheet_id
+  } catch (_) { /* DB unavailable — that's OK */ }
+
+  res.json({ user })
 })
 
 // PUT /api/auth/password — admin only

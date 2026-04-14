@@ -45,6 +45,11 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (username, password) => {
     const data = await api.login({ username, password })
+    // Store token in localStorage as Authorization header fallback
+    // (cross-origin cookies can be blocked by browsers)
+    if (data.token) {
+      try { localStorage.setItem('tl_token', data.token) } catch (_) {}
+    }
     dispatch({ type: 'SET_USER', payload: data.user })
     toast.success(`Welcome back, ${data.user.display_name || data.user.username}!`)
     await checkMe()
@@ -53,6 +58,7 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(async () => {
     try { await api.logout() } catch (_) {}
+    try { localStorage.removeItem('tl_token') } catch (_) {}
     dispatch({ type: 'LOGOUT' })
     toast.success('Logged out')
   }, [])
