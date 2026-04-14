@@ -12,12 +12,6 @@ export default defineConfig(({ mode }) => ({
   // Dev: base = '/' so Vite dev server works normally
   base: mode === 'production' ? '/tiger-library/' : '/',
 
-  // Inject process.env.VITE_API_URL at build time so api/client.js gets the
-  // Railway URL baked in. In dev this is '' so the proxy handles /api/*.
-  define: {
-    'process.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL || ''),
-  },
-
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
   },

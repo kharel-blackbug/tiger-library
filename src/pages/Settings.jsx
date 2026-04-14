@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Settings2, Sheet, Key, User, CheckCircle, AlertCircle, ExternalLink, Copy } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
+import { useLibrary } from '@/context/LibraryContext'
 import { api } from '@/api/client'
 import Button from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -22,6 +23,8 @@ function Section({ title, icon: Icon, children }) {
 
 export default function Settings() {
   const { user, checkMe } = useAuth()
+  const { fetchBooks } = useLibrary()
+  const [seeding, setSeeding] = useState(false)
   const [sheetStatus, setSheetStatus] = useState(null)
   const [sheetForm, setSheetForm] = useState({ sheet_id: '', credentials: '' })
   const [connecting, setConnecting] = useState(false)
@@ -49,9 +52,23 @@ export default function Settings() {
       const status = await api.sheetStatus()
       setSheetStatus(status)
       await checkMe()
+      fetchBooks()  // load books immediately after connecting
     } catch (e) {
       toast.error(e.message)
     } finally { setConnecting(false) }
+  }
+
+  const handleSeed = async () => {
+    setSeeding(true)
+    try {
+      const data = await api.seedBooks()
+      toast.success(data.message)
+      if (data.seeded > 0) fetchBooks()
+    } catch (e) {
+      toast.error(e.message)
+    } finally {
+      setSeeding(false)
+    }
   }
 
   const handleChangePass = async () => {
@@ -136,6 +153,18 @@ export default function Settings() {
           <Button loading={connecting} onClick={handleConnectSheet} className="w-full">
             <Sheet size={13} /> Connect Google Sheet
           </Button>
+
+          {sheetStatus?.connected && (
+            <div className="bg-mist rounded-xl p-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-ink">Import Base Catalogue</p>
+                <p className="text-xs text-stone mt-0.5">Write all 233 curated books to your Google Sheet</p>
+              </div>
+              <Button size="sm" loading={seeding} onClick={handleSeed} variant="secondary">
+                Import Books
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Setup guide */}

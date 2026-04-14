@@ -61,4 +61,5 @@ export const api = {
   scanImages:   fd    => request('POST', '/scan', fd, true),
   lookupBook:   d     => request('POST', '/scan/lookup', d),
   getStats:     ()    => request('GET',  '/stats'),
+  seedBooks:    ()    => request('POST', '/books/seed'),
 }

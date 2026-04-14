@@ -191,4 +191,47 @@ router.post('/bulk', requireAuth, requireAdmin, wrap(async (req, res) => {
   res.status(201).json({ imported: prepared.length, books: prepared })
 }))
 
+// POST /api/books/seed — write all 233 base books to the Google Sheet
+// Only runs if the sheet has no books yet (safe to call multiple times)
+router.post('/seed', requireAuth, requireAdmin, wrap(async (req, res) => {
+  if (!req.sheetsDB) return noSheets(res)
+
+  // Check if books already exist in the sheet
+  const existing = await req.sheetsDB.readAll('Books')
+  if (existing.length > 0) {
+    return res.json({ seeded: 0, message: `Sheet already has ${existing.length} books — skipping seed` })
+  }
+
+  const BASE_BOOKS = require('../books_seed')
+  const now = require('dayjs')().toISOString()
+
+  const prepared = BASE_BOOKS.map(b => ({
+    id:           require('crypto').randomUUID(),
+    title:        b.title || '',
+    author:       b.author || '',
+    genre:        b.genre || 'Non-Fiction',
+    type:         b.type  || 'Non-Fiction',
+    year:         b.year  ? String(b.year) : '',
+    nation:       b.nation || '',
+    description:  b.description || '',
+    is_base:      '1',
+    is_sikkim:    b.is_sikkim ? '1' : '0',
+    cover_url:    '',
+    rating:       '',
+    status:       '',
+    review:       '',
+    review_date:  '',
+    total_pages:  b.total_pages ? String(b.total_pages) : '',
+    current_page: '',
+    date_started: '',
+    date_finished:'',
+    added_by:     'system',
+    added_at:     now,
+  }))
+
+  await req.sheetsDB.bulkAppend('Books', prepared)
+  res.status(201).json({ seeded: prepared.length, message: `${prepared.length} books added to your Google Sheet` })
+}))
+
+
 module.exports = router
